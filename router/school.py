@@ -1,17 +1,18 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from db import database
 from functions.school import add_school, updade_school, delete_school
 from models.school import School
 from schema.school import SchemaSchool
+from utils.pagination import pagination
 
 school_router = APIRouter()
 
 
 @school_router.get("/get_schools")
-def get_school(db: Session = Depends(database)):
+def get_school(page: int = Query(gt=0), limit: int = Query(gt=0, lt=25), db: Session = Depends(database)):
     try:
-        return db.query(School).all()
+        return pagination(School, page, limit, db)
     except Exception as e:
         raise e
 

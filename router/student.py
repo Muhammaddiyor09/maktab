@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends
+import math
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session, joinedload
 from db import database
 from functions.student import add_student, updade_student, delete_student
@@ -9,9 +10,17 @@ student_router = APIRouter()
 
 
 @student_router.get("/get_students")
-def get_student(db: Session = Depends(database)):
+def get_student(page: int = Query(gt=0), limit: int = Query(gt=0, lt=25), db: Session = Depends(database)):
     try:
-        return db.query(Student).options(joinedload(Student.school)).all()
+        offset = (page - 1) * limit
+        page_count = db.query(Student).count()
+        result = db.query(Student).limit(limit).offset(offset).options(joinedload(Student.school)).all()
+        return {
+            "page": page,
+            "limit": limit,
+            "page_count": math.ceil(page_count / limit),
+            "data": result
+        }
     except Exception as e:
         raise e
 
